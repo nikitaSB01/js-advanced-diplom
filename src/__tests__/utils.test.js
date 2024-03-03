@@ -11,6 +11,7 @@ test('проверка calcTileType', () => {
   expect(calcTileType(7, 8)).toBe('top-right');
 });
 
-test('проверка calcTileType на center', () => {
+test('проверка calcTileType на center и top-right при boardSize = 7', () => {
   expect(calcTileType(9, 8)).toBe('center');
+  expect(calcTileType(6, 7)).toBe('top-right');
 });
