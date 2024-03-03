@@ -15,13 +15,19 @@ export default class GameController {
     this.gamePlay = gamePlay;
     this.stateService = stateService;
     this.fieldSize = this.gamePlay.boardSize;
+
+  /*  this.onCellClick = this.onCellClick.bind(this);
+    this.onCellEnter = this.onCellEnter.bind(this);
+    this.onCellLeave = this.onCellLeave.bind(this);
+
+    this.addEvents(); */
   }
 
   init() {
     this.theme = themes.prairie;
     this.level = 1;
-    this.gamePlay.drawUi(this.theme);
 
+    this.gamePlay.drawUi(this.theme);
     this.playerTeam = generateTeam([Bowman, Swordsman, Magician], this.level, 3);
     this.playerPositions = this.generatePositions('playerTeam');
     this.positionedPlayerTeam = this.createPositionedTeam(this.playerTeam, this.playerPositions);
@@ -34,6 +40,34 @@ export default class GameController {
     this.gamePlay.redrawPositions(this.allChars);
   }
 
+  generatePositions(string) {
+    const positions = [];
+    for (let i = 0; i < this.fieldSize; i += 1) {
+      for (let j = 0; j < this.fieldSize; j += 1) {
+        if (string === 'playerTeam' && j < 2) {
+          positions.push(i * this.fieldSize + j);
+        } else if (string === 'enemyTeam' && j >= this.fieldSize - 2) {
+          positions.push(i * this.fieldSize + j);
+        }
+      }
+    }
+    return positions;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  createPositionedTeam(team, positions) {
+    const positionedTeam = [];
+
+    team.characters.forEach((char) => {
+      const randomIndex = Math.floor(Math.random() * positions.length);
+      const position = positions.splice(randomIndex, 1)[0];
+      const positionedCharacter = new PositionedCharacter(char, position);
+      positionedTeam.push(positionedCharacter);
+    });
+
+    return positionedTeam;
+  }
+
   onCellClick(index) {
     // TODO: react to click
   }
@@ -44,29 +78,5 @@ export default class GameController {
 
   onCellLeave(index) {
     // TODO: react to mouse leave
-  }
-
-  generatePositions(string) {
-    const positions = [];
-    const playerColumns = string === 'playerTeam' ? 2 : 0;
-    for (let i = 0; i < this.fieldSize; i += 1) {
-      for (let j = 0; j < playerColumns; j += 1) {
-        positions.push(i * this.fieldSize + j);
-      }
-    }
-    return positions;
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  createPositionedTeam(team, positions) {
-    const positionedTeam = [];
-    team.characters.forEach((char) => {
-      const randomIndex = Math.floor(Math.random() * positions.length);
-      const position = positions.splice(randomIndex, 1)[0];
-      const positionedCharacter = new PositionedCharacter(char, position);
-      positionedTeam.push(positionedCharacter);
-    });
-
-    return positionedTeam;
   }
 }
