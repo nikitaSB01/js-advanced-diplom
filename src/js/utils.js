@@ -23,7 +23,25 @@
  * ```
  * */
 export function calcTileType(index, boardSize) {
-  // TODO: ваш код будет тут
+  // Функция для преобразования одномерного индекса в двумерные координаты
+  /* function rowCol(oneDimensionalIndex, size) {
+    return [Math.floor(oneDimensionalIndex / size), oneDimensionalIndex % size]
+  }; */
+  const boundaries = {
+    top: [1, 2, 3, 4, 5, 6],
+    bottom: [57, 58, 59, 60, 61, 62],
+    left: [8, 16, 24, 32, 40, 48],
+    right: [15, 23, 31, 39, 47, 55],
+    'top-left': [0],
+    'top-right': [7],
+    'bottom-left': [56],
+    'bottom-right': [63],
+  };
+  for (const boundary in boundaries) {
+    if (boundaries[boundary].includes(index)) {
+      return boundary;
+    }
+  }
   return 'center';
 }
 
