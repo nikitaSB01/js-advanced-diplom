@@ -27,21 +27,28 @@ export function calcTileType(index, boardSize) {
   /* function rowCol(oneDimensionalIndex, size) {
     return [Math.floor(oneDimensionalIndex / size), oneDimensionalIndex % size]
   }; */
-  const boundaries = {
-    top: [1, 2, 3, 4, 5, 6],
-    bottom: [57, 58, 59, 60, 61, 62],
-    left: [8, 16, 24, 32, 40, 48],
-    right: [15, 23, 31, 39, 47, 55],
-    'top-left': [0],
-    'top-right': [7],
-    'bottom-left': [56],
-    'bottom-right': [63],
+
+  const firstRow = index < boardSize;
+  const lastRow = index >= boardSize * (boardSize - 1);
+  const leftColumn = index % boardSize === 0;
+  const rightColumn = index % boardSize === boardSize - 1;
+
+  const positions = {
+    'top-left': firstRow && leftColumn,
+    'top-right': firstRow && rightColumn,
+    'bottom-left': lastRow && leftColumn,
+    'bottom-right': lastRow && rightColumn,
+    top: firstRow && !(leftColumn || rightColumn),
+    bottom: lastRow && !(leftColumn || rightColumn),
+    left: leftColumn && !(firstRow || lastRow),
+    right: rightColumn && !(firstRow || lastRow),
   };
-  for (const boundary in boundaries) {
-    if (boundaries[boundary].includes(index)) {
-      return boundary;
+  for (const position in positions) {
+    if (positions[position]) {
+      return position;
     }
   }
+
   return 'center';
 }
 
