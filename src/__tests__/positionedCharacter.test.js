@@ -3,7 +3,7 @@ import Vampire from '../js/characters/Vampire';
 
 test('check Error PositionedCharacter in character and type position', () => {
   const char = {
-    name: 'fdfdf',
+    name: 'shop',
   };
   const charV = new Vampire(2);
   expect(() => new PositionedCharacter(char)).toThrow();
