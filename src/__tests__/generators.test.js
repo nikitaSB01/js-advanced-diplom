@@ -6,11 +6,11 @@ import Team from '../js/Team';
 
 test('check characterGenerator', () => {
   const characterCount = 100;
-  const generTeam = characterGenerator([Bowman, Swordsman, Magician], 3);
+  const generatorsTeam = characterGenerator([Bowman, Swordsman, Magician], 3);
   const team = [];
   for (let i = 0; i < characterCount; i += 1) {
-    const generChar = generTeam.next().value;
-    team.push(generChar);
+    const generatorsChar = generatorsTeam.next().value;
+    team.push(generatorsChar);
   }
   const resTeam = new Team(team);
   expect(resTeam.characters.length).toEqual(100);
