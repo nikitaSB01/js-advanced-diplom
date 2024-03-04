@@ -1,14 +1,14 @@
-import GamePlay from "./GamePlay";
-import themes from "./themes";
-import PositionedCharacter from "./PositionedCharacter";
-import Bowman from "./characters/Bowman";
-import Swordsman from "./characters/Swordsman";
-import Magician from "./characters/Magician";
-import Vampire from "./characters/Vampire";
-import Daemon from "./characters/Daemon";
-import Undead from "./characters/Undead";
-import GameState from "./GameState";
-import { generateTeam } from "./generators";
+import GamePlay from './GamePlay';
+import themes from './themes';
+import PositionedCharacter from './PositionedCharacter';
+import Bowman from './characters/Bowman';
+import Swordsman from './characters/Swordsman';
+import Magician from './characters/Magician';
+import Vampire from './characters/Vampire';
+import Daemon from './characters/Daemon';
+import Undead from './characters/Undead';
+import GameState from './GameState';
+import { generateTeam } from './generators';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -31,19 +31,19 @@ export default class GameController {
     this.playerTeam = generateTeam(
       [Bowman, Swordsman, Magician],
       this.level,
-      3
+      3,
     );
-    this.playerPositions = this.generatePositions("playerTeam");
+    this.playerPositions = this.generatePositions('playerTeam');
     this.positionedPlayerTeam = this.createPositionedTeam(
       this.playerTeam,
-      this.playerPositions
+      this.playerPositions,
     );
 
     this.enemyTeam = generateTeam([Vampire, Undead, Daemon], this.level, 3);
-    this.enemyPositions = this.generatePositions("enemyTeam");
+    this.enemyPositions = this.generatePositions('enemyTeam');
     this.positionedEnemyTeam = this.createPositionedTeam(
       this.enemyTeam,
-      this.enemyPositions
+      this.enemyPositions,
     );
     this.allChars = [...this.positionedPlayerTeam, ...this.positionedEnemyTeam];
 
@@ -54,9 +54,9 @@ export default class GameController {
     const positions = [];
     for (let i = 0; i < this.fieldSize; i += 1) {
       for (let j = 0; j < this.fieldSize; j += 1) {
-        if (string === "playerTeam" && j < 2) {
+        if (string === 'playerTeam' && j < 2) {
           positions.push(i * this.fieldSize + j);
-        } else if (string === "enemyTeam" && j >= this.fieldSize - 2) {
+        } else if (string === 'enemyTeam' && j >= this.fieldSize - 2) {
           positions.push(i * this.fieldSize + j);
         }
       }
@@ -88,6 +88,7 @@ export default class GameController {
     this.gamePlay.addLoadGameListener(() => this.loadGame());
   }
 
+  // eslint-disable-next-line class-methods-use-this
   onCellClick(index) {
     // TODO: react to click
   }
@@ -98,16 +99,20 @@ export default class GameController {
   }
 
   onCellEnter(index) {
-    // TODO: react to mouse enter
-    const cellWithChar = this.gamePlay.cells[index].querySelector(".character");
+    if (this.gameOver) return;
+    const cellWithChar = this.gamePlay.cells[index].querySelector('.character');
     this.enteredCell = this.gamePlay.cells[index];
 
     // Проверяем, есть ли персонаж в наведенной клетке
     if (cellWithChar) {
       this.enteredChar = this.allChars.find((char) => char.position === index);
-      const mess = this.createMessage(this.enteredChar.character);
-      this.gamePlay.showCellTooltip(mess, index);
+      const message = this.createMessage(this.enteredChar.character);
+      this.gamePlay.showCellTooltip(message, index);
       this.gamePlay.setCursor('pointer');
+    }
+    const selectedCell = this.gamePlay.cells[index].classList.contains('selected');
+    if (!selectedCell && !cellWithChar) {
+      this.gamePlay.setCursor('default');
     }
   }
 

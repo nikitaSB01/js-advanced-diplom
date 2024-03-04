@@ -23,11 +23,6 @@
  * ```
  * */
 export function calcTileType(index, boardSize) {
-  // Функция для преобразования одномерного индекса в двумерные координаты
-  /* function rowCol(oneDimensionalIndex, size) {
-    return [Math.floor(oneDimensionalIndex / size), oneDimensionalIndex % size]
-  }; */
-
   const firstRow = index < boardSize;
   const lastRow = index >= boardSize * (boardSize - 1);
   const leftColumn = index % boardSize === 0;
