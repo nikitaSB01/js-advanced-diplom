@@ -1,6 +1,12 @@
 export default class GameState {
   static from(object) {
-    // TODO: create object
-    return null;
+    const state = {
+      player: object.isPlayer,
+      theme: object.theme,
+      level: object.level,
+      allChars: object.chars,
+    };
+
+    return state;
   }
 }

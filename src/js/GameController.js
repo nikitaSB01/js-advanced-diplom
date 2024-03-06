@@ -39,7 +39,7 @@ export default class GameController {
       this.playerPositions,
     );
 
-    this.enemyTeam = generateTeam([Vampire, Undead, Daemon], this.level, 3);
+    this.enemyTeam = generateTeam([Vampire, Undead, Daemon], this.level, 4);
     this.enemyPositions = this.generatePositions('enemyTeam');
     this.positionedEnemyTeam = this.createPositionedTeam(
       this.enemyTeam,
@@ -48,6 +48,13 @@ export default class GameController {
     this.allChars = [...this.positionedPlayerTeam, ...this.positionedEnemyTeam];
 
     this.gamePlay.redrawPositions(this.allChars);
+    this.state = {
+      isPlayer: true,
+      theme: this.theme,
+      level: this.level,
+      chars: this.allChars,
+    };
+    GameState.from(this.state);
   }
 
   generatePositions(string) {
@@ -90,7 +97,35 @@ export default class GameController {
 
   // eslint-disable-next-line class-methods-use-this
   onCellClick(index) {
-    // TODO: react to click
+    if (this.gameOver) return;
+    const cellWithCharacter = this.gamePlay.cells[index].querySelector('.character');
+    this.clickedChar = this.allChars.find((char) => char.position === index);
+    const isPlayerChar = this.checkPlayerChar(this.clickedChar);
+
+    if (cellWithCharacter && isPlayerChar) {
+      this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
+      this.gamePlay.selectCell(index);
+      this.activChar = this.clickedChar;
+      this.activIndex = index;
+    }/*  else{
+
+    } */
+  }
+
+  // Проверяет, является ли кликнутый персонаж персонажем игрока
+  // eslint-disable-next-line class-methods-use-this
+  checkPlayerChar(char) {
+    if (!char) {
+      this.gamePlay.showError('Игрок отсутствует');
+      return false;
+    }
+    const forbiddenTypes = ['daemon', 'undead', 'vampire'];
+    const playerType = char.character.type;
+    if (forbiddenTypes.includes(playerType)) {
+      this.gamePlay.showError('Выбран тип злодея');
+      return false;
+    }
+    return true;
   }
 
   // eslint-disable-next-line class-methods-use-this
