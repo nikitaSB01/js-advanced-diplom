@@ -105,24 +105,26 @@ export default class GameController {
     if (cellWithCharacter && isPlayerChar) {
       this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
       this.gamePlay.selectCell(index);
-      this.activChar = this.clickedChar;
-      this.activIndex = index;
-    }/*  else{
-
-    } */
+      this.activeChar = this.clickedChar;
+      this.activeIndex = index;
+    } else {
+      //  GamePlay.showMessage('Выберите другого персонажа');
+      this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
+      this.clickedChar = null;
+    }
   }
 
   // Проверяет, является ли кликнутый персонаж персонажем игрока
   // eslint-disable-next-line class-methods-use-this
   checkPlayerChar(char) {
     if (!char) {
-      this.gamePlay.showError('Игрок отсутствует');
+      GamePlay.showError('Игрок отсутствует');
       return false;
     }
     const forbiddenTypes = ['daemon', 'undead', 'vampire'];
     const playerType = char.character.type;
     if (forbiddenTypes.includes(playerType)) {
-      this.gamePlay.showError('Выбран тип злодея');
+      GamePlay.showError('Выбран тип злодея');
       return false;
     }
     return true;
