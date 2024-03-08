@@ -9,6 +9,7 @@ import Daemon from './characters/Daemon';
 import Undead from './characters/Undead';
 import GameState from './GameState';
 import { generateTeam } from './generators';
+import canMove from './AttackOrMove';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -151,10 +152,24 @@ export default class GameController {
     if (!selectedCell && !cellWithChar) {
       this.gamePlay.setCursor('default');
     }
+    // Если есть кликнутый персонаж при наведении им на другую клетку без персонажа,
+    // проверяем может ли туда походить персонаж, если да, то подсвечиваем зеленым кругом
+    if (this.clickedChar && !cellWithChar) {
+      const playerType = this.clickedChar.character.type;
+
+      if (canMove(playerType, this.clickedChar.position, index, this.fieldSize)) {
+        this.gamePlay.selectCell(index, 'green');
+        this.gamePlay.setCursor('pointer');
+      }
+    }
   }
 
   onCellLeave(index) {
-    // TODO: react to mouse leave
+    if (this.gameOver) return;
     this.gamePlay.hideCellTooltip(index);
+
+    if (!this.gamePlay.cells[index].classList.contains('selected-yellow')) {
+      this.gamePlay.deselectCell(index);
+    }
   }
 }
