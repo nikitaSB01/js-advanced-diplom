@@ -13,3 +13,19 @@ export default function canMove(playerType, currentPos, targetPos, fieldSize) {
 
   return rowDiff <= maxDistance && colDiff <= maxDistance;
 }
+
+function canAttack(attackerType, attackerPos, targetPos, fieldSize) {
+  const rowDiff = Math.abs(Math.floor(attackerPos / fieldSize) - Math.floor(targetPos / fieldSize));
+  const colDiff = Math.abs((attackerPos % fieldSize) - (targetPos % fieldSize));
+
+  let attackRange;
+  if (attackerType === 'swordsman' || attackerType === 'undead') {
+    attackRange = 1;
+  } else if (attackerType === 'bowman' || attackerType === 'vampire') {
+    attackRange = 2;
+  } else {
+    attackRange = 4;
+  }
+
+  return rowDiff <= attackRange && colDiff <= attackRange;
+}

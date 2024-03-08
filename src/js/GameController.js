@@ -9,7 +9,7 @@ import Daemon from './characters/Daemon';
 import Undead from './characters/Undead';
 import GameState from './GameState';
 import { generateTeam } from './generators';
-import canMove from './AttackOrMove';
+import canMove, { canAttack } from './AttackOrMove';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -152,6 +152,7 @@ export default class GameController {
     if (!selectedCell && !cellWithChar) {
       this.gamePlay.setCursor('default');
     }
+
     // Если есть кликнутый персонаж при наведении им на другую клетку без персонажа,
     // проверяем может ли туда походить персонаж, если да, то подсвечиваем зеленым кругом
     if (this.clickedChar && !cellWithChar) {
@@ -160,6 +161,21 @@ export default class GameController {
       if (canMove(playerType, this.clickedChar.position, index, this.fieldSize)) {
         this.gamePlay.selectCell(index, 'green');
         this.gamePlay.setCursor('pointer');
+      }
+    }
+
+    // Если есть кликнутый персонаж при наведении им на врага,
+    // проверяем может ли его атаковать, если да, то подсвечиваем красным кругом
+    if (this.clickedChar && cellWithChar) {
+      const isPlayerChar = this.checkPlayerChar(this.enteredChar);
+      if (isPlayerChar) return;
+
+      const attackerType = this.clickedChar.character.type;
+      if (canAttack(attackerType, this.clickedChar.position, index, this.fieldSize)) {
+        this.gamePlay.selectCell(index, 'red');
+        this.gamePlay.setCursor('crosshair');
+      } else {
+        this.gamePlay.setCursor('not-allowed');
       }
     }
   }
