@@ -21,7 +21,7 @@ export default function canMoveOrAttack(charType, currentPos, targetPos, fieldSi
         maxMovDist = 1;
         break;
       default:
-        console.log('Unknown character type');
+        console.log('Выбран неверный тип игрока');
         return false;
     }
     return rowDiff <= maxMovDist && colDiff <= maxMovDist && (rowDiff === 0 || colDiff === 0 || rowDiff === colDiff);
@@ -41,7 +41,7 @@ export default function canMoveOrAttack(charType, currentPos, targetPos, fieldSi
         maxAttackRadius = 4;
         break;
       default:
-        console.log('Unknown character type');
+        console.log('Выбран неверный тип злыдня');
         return false;
     }
 
