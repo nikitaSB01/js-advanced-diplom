@@ -62,7 +62,7 @@ export default class GameController {
     const positions = [];
     for (let i = 0; i < this.fieldSize; i += 1) {
       for (let j = 0; j < this.fieldSize; j += 1) {
-        if (string === 'playerTeam' && j < 5) {
+        if (string === 'playerTeam' && j < 6) {
           positions.push(i * this.fieldSize + j);
         } else if (string === 'enemyTeam' && j >= this.fieldSize - 2) {
           positions.push(i * this.fieldSize + j);
