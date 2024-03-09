@@ -1,4 +1,41 @@
-export default function canMove(playerType, currentPos, targetPos, fieldSize) {
+export default function canMoveOrAttack(charType, currentPos, targetPos, fieldSize, actionType) {
+  const rowDiff = Math.abs(Math.floor(currentPos / fieldSize) - Math.floor(targetPos / fieldSize));
+  const colDiff = Math.abs((currentPos % fieldSize) - (targetPos % fieldSize));
+  let maxMoveDistance; let
+    maxAttackDistance;
+
+  // Определение максимальной дистанции перемещения и атаки в зависимости от типа персонажа
+  switch (charType) {
+    case 'swordsman':
+    case 'undead':
+      maxMoveDistance = 4;
+      maxAttackDistance = 1;
+      break;
+    case 'bowman':
+    case 'vampire':
+      maxMoveDistance = 2;
+      maxAttackDistance = 2;
+      break;
+    case 'magician':
+    case 'daemon':
+      maxMoveDistance = 1;
+      maxAttackDistance = 4;
+      break;
+    default:
+      console.log('Unknown character type');
+      return false;
+  }
+
+  // Проверка допустимости действия (перемещение или атака)
+  if (actionType === 'move' && rowDiff <= maxMoveDistance && colDiff <= maxMoveDistance) {
+    return true;
+  } if (actionType === 'attack' && rowDiff <= maxAttackDistance && colDiff <= maxAttackDistance) {
+    return true;
+  }
+  return false;
+}
+
+/* export default function canMove(playerType, currentPos, targetPos, fieldSize, attack = null) {
   const rowDiff = Math.abs(Math.floor(currentPos / fieldSize) - Math.floor(targetPos / fieldSize));
   const colDiff = Math.abs((currentPos % fieldSize) - (targetPos % fieldSize));
 
@@ -12,6 +49,10 @@ export default function canMove(playerType, currentPos, targetPos, fieldSize) {
   }
 
   return rowDiff <= maxDistance && colDiff <= maxDistance;
+
+  if (attack) {
+    console.log(true);
+  }
 }
 
 function canAttack(attackerType, attackerPos, targetPos, fieldSize) {
@@ -29,3 +70,4 @@ function canAttack(attackerType, attackerPos, targetPos, fieldSize) {
 
   return rowDiff <= attackRange && colDiff <= attackRange;
 }
+ */

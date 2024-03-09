@@ -9,7 +9,7 @@ import Daemon from './characters/Daemon';
 import Undead from './characters/Undead';
 import GameState from './GameState';
 import { generateTeam } from './generators';
-import canMove, { canAttack } from './AttackOrMove';
+import canMoveOrAttack from './AttackOrMove';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -62,7 +62,7 @@ export default class GameController {
     const positions = [];
     for (let i = 0; i < this.fieldSize; i += 1) {
       for (let j = 0; j < this.fieldSize; j += 1) {
-        if (string === 'playerTeam' && j < 2) {
+        if (string === 'playerTeam' && j < 5) {
           positions.push(i * this.fieldSize + j);
         } else if (string === 'enemyTeam' && j >= this.fieldSize - 2) {
           positions.push(i * this.fieldSize + j);
@@ -122,13 +122,8 @@ export default class GameController {
       GamePlay.showError('Игрок отсутствует');
       return false;
     }
-    const forbiddenTypes = ['daemon', 'undead', 'vampire'];
-    const playerType = char.character.type;
-    if (forbiddenTypes.includes(playerType)) {
-      GamePlay.showError('Выбран тип злодея');
-      return false;
-    }
-    return true;
+    const playerChar = char.character.type;
+    return playerChar === 'bowman' || playerChar === 'swordsman' || playerChar === 'magician';
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -158,9 +153,11 @@ export default class GameController {
     if (this.clickedChar && !cellWithChar) {
       const playerType = this.clickedChar.character.type;
 
-      if (canMove(playerType, this.clickedChar.position, index, this.fieldSize)) {
+      if (canMoveOrAttack(playerType, this.clickedChar.position, index, this.fieldSize, 'move')) {
         this.gamePlay.selectCell(index, 'green');
         this.gamePlay.setCursor('pointer');
+      } else {
+        this.gamePlay.setCursor('not-allowed');
       }
     }
 
@@ -171,7 +168,7 @@ export default class GameController {
       if (isPlayerChar) return;
 
       const attackerType = this.clickedChar.character.type;
-      if (canAttack(attackerType, this.clickedChar.position, index, this.fieldSize)) {
+      if (canMoveOrAttack(attackerType, this.clickedChar.position, index, this.fieldSize, 'attack')) {
         this.gamePlay.selectCell(index, 'red');
         this.gamePlay.setCursor('crosshair');
       } else {
