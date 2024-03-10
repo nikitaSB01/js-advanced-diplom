@@ -144,21 +144,22 @@ export default class GameController {
         this.gamePlay.redrawPositions(this.allChars);
         // Убираем выделение ячеек
         this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
-        // ВРЕМЕННО
+        // ВРЕМЕННО ///////////////////////////////////////////////////////////////////////////////
         this.activeChar = null;
         // Переход
         this.switchTurn();
       } else {
         alert('ячейка в не зоны досигаемости вашего персонажа');
-        //  this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
-        //  this.activeChar = null;
+        // снимаем актив с перса
+        this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
+        this.activeChar = null;
       }
-    } else if (this.activeChar) {
+    } /* else if (this.activeChar) {
       // если есть активный игрок и он кликает на противника
       alert('это противник!!!');
       this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
       this.clickedChar = null;
-    } else {
+    } */ else {
       // если нет активного игрока и клик происходит просто по пустой клетке
       GamePlay.showError('Игрок отсутствует');
       this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
