@@ -62,7 +62,7 @@ export default class GameController {
     const positions = [];
     for (let i = 0; i < this.fieldSize; i += 1) {
       for (let j = 0; j < this.fieldSize; j += 1) {
-        if (string === 'playerTeam' && j < 2) {
+        if (string === 'playerTeam' && j < 6) {
           positions.push(i * this.fieldSize + j);
         } else if (string === 'enemyTeam' && j >= this.fieldSize - 2) {
           positions.push(i * this.fieldSize + j);
@@ -75,7 +75,6 @@ export default class GameController {
   // eslint-disable-next-line class-methods-use-this
   createPositionedTeam(team, positions) {
     const positionedTeam = [];
-
     team.characters.forEach((char) => {
       const randomIndex = Math.floor(Math.random() * positions.length);
       const position = positions.splice(randomIndex, 1)[0];
@@ -96,34 +95,75 @@ export default class GameController {
     this.gamePlay.addLoadGameListener(() => this.loadGame());
   }
 
+  // Проверяет, является ли кликнутый персонаж персонажем игрока
+  // eslint-disable-next-line class-methods-use-this
+  checkPlayerChar(char) {
+    if (!char) {
+      //  GamePlay.showError('Игрок отсутствует');
+      return false;
+    }
+    const playerChar = char.character.type;
+    return (
+      playerChar === 'bowman'
+      || playerChar === 'swordsman'
+      || playerChar === 'magician'
+    );
+  }
+
+  // метод смены хода
+  // eslint-disable-next-line class-methods-use-this
+  switchTurn() {}
+
   // eslint-disable-next-line class-methods-use-this
   onCellClick(index) {
     if (this.gameOver) return;
     const cellWithCharacter = this.gamePlay.cells[index].querySelector('.character');
     this.clickedChar = this.allChars.find((char) => char.position === index);
     const isPlayerChar = this.checkPlayerChar(this.clickedChar);
-
+    // если клик происходит на клетку с персом (cellWithCharacter) и он явл игроком (isPlayerChar)
+    // тогда выделяем этого игрока желтым кругом (делаем его активным игроком)
     if (cellWithCharacter && isPlayerChar) {
       this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
       this.gamePlay.selectCell(index);
       this.activeChar = this.clickedChar;
       this.activeIndex = index;
+      // (ниже)  если есть актив игрок и клик происходит на пустую ячейку
+    } else if (!cellWithCharacter && this.activeChar) {
+      if (
+        canMoveOrAttack(
+          this.activeChar.character.type,
+          this.activeChar.position,
+          index,
+          this.fieldSize,
+          'move',
+        )
+      ) {
+        // Обновляем позицию активного персонажа
+        this.activeChar.position = index;
+        // Обновляем отображение персонажей
+        this.gamePlay.redrawPositions(this.allChars);
+        // Убираем выделение ячеек
+        this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
+        // ВРЕМЕННО
+        this.activeChar = null;
+        // Переход
+        this.switchTurn();
+      } else {
+        alert('ячейка в не зоны досигаемости вашего персонажа');
+        //  this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
+        //  this.activeChar = null;
+      }
+    } else if (this.activeChar) {
+      // если есть активный игрок и он кликает на противника
+      alert('это противник!!!');
+      this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
+      this.clickedChar = null;
     } else {
-      //  GamePlay.showMessage('Выберите другого персонажа');
+      // если нет активного игрока и клик происходит просто по пустой клетке
+      GamePlay.showError('Игрок отсутствует');
       this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
       this.clickedChar = null;
     }
-  }
-
-  // Проверяет, является ли кликнутый персонаж персонажем игрока
-  // eslint-disable-next-line class-methods-use-this
-  checkPlayerChar(char) {
-    if (!char) {
-      GamePlay.showError('Игрок отсутствует');
-      return false;
-    }
-    const playerChar = char.character.type;
-    return playerChar === 'bowman' || playerChar === 'swordsman' || playerChar === 'magician';
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -153,7 +193,15 @@ export default class GameController {
     if (this.clickedChar && !cellWithChar) {
       const playerType = this.clickedChar.character.type;
 
-      if (canMoveOrAttack(playerType, this.clickedChar.position, index, this.fieldSize, 'move')) {
+      if (
+        canMoveOrAttack(
+          playerType,
+          this.clickedChar.position,
+          index,
+          this.fieldSize,
+          'move',
+        )
+      ) {
         this.gamePlay.selectCell(index, 'green');
         this.gamePlay.setCursor('pointer');
       } else {
@@ -168,7 +216,15 @@ export default class GameController {
       if (isPlayerChar) return;
 
       const attackerType = this.clickedChar.character.type;
-      if (canMoveOrAttack(attackerType, this.clickedChar.position, index, this.fieldSize, 'attack')) {
+      if (
+        canMoveOrAttack(
+          attackerType,
+          this.clickedChar.position,
+          index,
+          this.fieldSize,
+          'attack',
+        )
+      ) {
         this.gamePlay.selectCell(index, 'red');
         this.gamePlay.setCursor('crosshair');
       } else {
