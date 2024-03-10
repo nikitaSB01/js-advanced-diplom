@@ -154,12 +154,14 @@ export default class GameController {
         this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
         this.activeChar = null;
       }
-    } /* else if (this.activeChar) {
+      //  код ниже будет между нижней ( } и else { )
+      /* else if (this.activeChar) {
       // если есть активный игрок и он кликает на противника
       alert('это противник!!!');
       this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
       this.clickedChar = null;
-    } */ else {
+    } */
+    } else {
       // если нет активного игрока и клик происходит просто по пустой клетке
       GamePlay.showError('Игрок отсутствует');
       this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
