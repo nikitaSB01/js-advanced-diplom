@@ -99,9 +99,9 @@ export default class GameController {
   // eslint-disable-next-line class-methods-use-this
   checkPlayerChar(char) {
     if (!char) {
-      //  GamePlay.showError('Игрок отсутствует');
-      return false;
+      return console.log('Character is missing');
     }
+
     const playerChar = char.character.type;
     return (
       playerChar === 'bowman'
@@ -110,63 +110,125 @@ export default class GameController {
     );
   }
 
-  // метод смены хода
+  // Расчет урона
   // eslint-disable-next-line class-methods-use-this
-  switchTurn() {}
+  calcDamage(attacker, target) {
+    const attackerAttack = attacker.character.attack;
+    const targetDefence = target.character.defence;
+    const damageDiff = attackerAttack - targetDefence;
+    const damage = Math.max(damageDiff, attackerAttack * 0.1);
+
+    return Math.floor(damage);
+  }
 
   // eslint-disable-next-line class-methods-use-this
   onCellClick(index) {
     if (this.gameOver) return;
-    const cellWithCharacter = this.gamePlay.cells[index].querySelector('.character');
+    const cellWithChar = this.gamePlay.cells[index].querySelector('.character');
     this.clickedChar = this.allChars.find((char) => char.position === index);
+
+    // Перемещаем персонажа
+    if (this.enteredCell.classList.contains('selected-green')) {
+      this.playerStep(index);
+      return;
+    }
+
+    // Атакуем противника
+    if (this.enteredCell.classList.contains('selected-red')) {
+      this.playerAttack(index);
+      return;
+    }
+
     const isPlayerChar = this.checkPlayerChar(this.clickedChar);
-    // если клик происходит на клетку с персом (cellWithCharacter) и он явл игроком (isPlayerChar)
-    // тогда выделяем этого игрока желтым кругом (делаем его активным игроком)
-    if (cellWithCharacter && isPlayerChar) {
+
+    if (cellWithChar && isPlayerChar) {
       this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
       this.gamePlay.selectCell(index);
       this.activeChar = this.clickedChar;
       this.activeIndex = index;
-      // (ниже)  если есть актив игрок и клик происходит на пустую ячейку
-    } else if (!cellWithCharacter && this.activeChar) {
-      if (
-        canMoveOrAttack(
-          this.activeChar.character.type,
-          this.activeChar.position,
-          index,
-          this.fieldSize,
-          'move',
-        )
-      ) {
-        // Обновляем позицию активного персонажа
-        this.activeChar.position = index;
-        // Обновляем отображение персонажей
-        this.gamePlay.redrawPositions(this.allChars);
-        // Убираем выделение ячеек
-        this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
-        // ВРЕМЕННО ///////////////////////////////////////////////////////////////////////////////
-        this.activeChar = null;
-        // Переход
-        this.switchTurn();
-      } else {
-        alert('ячейка в не зоны досигаемости вашего персонажа');
-        // снимаем актив с перса
-        this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
-        this.activeChar = null;
-      }
-      //  код ниже будет между нижней ( } и else { )
-      /* else if (this.activeChar) {
-      // если есть активный игрок и он кликает на противника
-      alert('это противник!!!');
-      this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
-      this.clickedChar = null;
-    } */
     } else {
-      // если нет активного игрока и клик происходит просто по пустой клетке
-      GamePlay.showError('Игрок отсутствует');
+      GamePlay.showMessage('Вы не выбрали персонажа или делаете недоступный Вам ход');
       this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
       this.clickedChar = null;
     }
+  }
+
+  // Перемещение игрока
+  playerStep(index) {
+    this.activeChar.position = index;
+    this.gamePlay.redrawPositions(this.allChars);
+    this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
+    this.clickedChar = null;
+    this.state.isPlayer = false;
+    this.state.chars = this.allChars;
+    GameState.from(this.state);
+    this.compAct();
+  }
+
+  playerAttack(index) {
+    // Получаем информацию о цели атаки
+    const targetCharacter = this.allChars.find((char) => char.position === index);
+    // Рассчитываем урон
+    const damage = this.calcDamage(this.activeChar, targetCharacter);
+    // Отображаем анимацию урона
+    this.gamePlay.showDamage(index, damage)
+      .then(() => {
+        // Уменьшаем здоровье атакованного персонажа
+        targetCharacter.character.health -= damage;
+        // Перерисовываем полоску здоровья атакованного персонажа
+        this.gamePlay.redrawPositions(this.allChars);
+        // Проверяем условие победы
+        if (targetCharacter.character.health <= 0) {
+          // eslint-disable-next-line max-len
+          this.positionedEnemyTeam = this.positionedEnemyTeam.filter((char) => char !== targetCharacter);
+          this.allChars = [...this.positionedPlayerTeam, ...this.positionedEnemyTeam];
+
+          // Проверяем, остались ли еще враги
+          if (this.positionedEnemyTeam.length === 0) {
+            // Вызываем метод для перехода на следующий уровень или завершения игры
+            this.levelUp();
+          }
+        }
+        this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
+        this.clickedChar = null;
+        this.activeChar = null;
+        this.state.isPlayer = false;
+        // Обновляем состояние игры
+        this.state.chars = this.allChars;
+        GameState.from(this.state);
+        // Переключаем ход компьютеру
+        this.compAct();
+      });
+  }
+
+  compAct() {
+    this.moveRandomEnemy();
+  }
+
+  moveRandomEnemy() {
+    // Выбираем случайного врага
+    const randomEnemyIndex = Math.floor(Math.random() * this.positionedEnemyTeam.length);
+    const randomEnemy = this.positionedEnemyTeam[randomEnemyIndex];
+    // Создаем массив всех доступных ячеек для перемещения
+    const availableCells = [];
+    for (let i = 0; i < this.fieldSize * this.fieldSize; i += 1) {
+      if (canMoveOrAttack(randomEnemy.character.type, randomEnemy.position, i, this.fieldSize, 'move')) {
+        availableCells.push(i);
+      }
+    }
+    // Исключаем занятые ячейки из массива доступных ячеек
+    const occupiedCells = this.allChars.map((char) => char.position);
+    const unoccupiedCells = availableCells.filter((cell) => !occupiedCells.includes(cell));
+    // Выбираем случайную незанятую ячейку из оставшихся
+    const randomCellIndex = Math.floor(Math.random() * unoccupiedCells.length);
+    const newPosition = unoccupiedCells[randomCellIndex];
+    // Перемещаем врага на выбранную ячейку
+    randomEnemy.position = newPosition;
+    // Обновляем отображение персонажей
+    this.gamePlay.redrawPositions(this.allChars);
+    // Обновляем состояние игры
+    this.state.chars = this.allChars;
+    GameState.from(this.state);
   }
 
   // eslint-disable-next-line class-methods-use-this
