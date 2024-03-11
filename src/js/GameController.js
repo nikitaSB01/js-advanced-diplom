@@ -203,6 +203,7 @@ export default class GameController {
 
   compAct() {
     let targetHero = null; // Переменная для хранения доступного для атаки героя
+    let targetEnemy = null; // Переменная для хранения доступного для атаки героя
     // Получаем всех героев игрока
     const playerHeroes = this.positionedPlayerTeam.map((hero) => hero.position);
     // Перебираем всех злодеев на карте
@@ -210,9 +211,10 @@ export default class GameController {
       // Проверяем доступность атаки злодея к каждому герою игрока
       for (const playerHero of playerHeroes) {
         if (canMoveOrAttack(enemy.character.type, enemy.position, playerHero, this.fieldSize, 'attack')) {
-          // Если хотя бы один герой игрока находится в зоне атаки злодея, 
+          // Если хотя бы один герой игрока находится в зоне атаки злодея,
           // сохраняем его в переменной targetHero
           targetHero = playerHero;
+          targetEnemy = enemy;
           break; // Прерываем цикл, так как уже нашли цель для атаки
         }
       }
@@ -223,14 +225,38 @@ export default class GameController {
     }
     // Если есть цель для атаки, атакуем ее, иначе перемещаемся
     if (targetHero !== null) {
-      this.enemyAttack(targetHero);
+      //  const playerCharacter = this.positionedPlayerTeam.find((char) => char.position === targetHero);
+      this.enemyAttack(targetHero, targetEnemy);
     } else {
       this.moveRandomEnemy();
     }
   }
 
-  enemyAttack(targetHero) {
-    console.log(targetHero);
+  enemyAttack(targetHero, targetEnemy) {
+    // Находим цель атаки (героя игрока) по индексу
+    const targetCharacter = this.allChars.find((char) => char.position === targetHero);
+    // Рассчитываем урон злодея по цели атаки
+    const damage = this.calcDamage(targetEnemy, targetCharacter);
+    // Отображаем анимацию урона на герое игрока
+    this.gamePlay.showDamage(targetHero, damage)
+      .then(() => {
+        // Уменьшаем здоровье героя игрока на рассчитанный урон
+        targetCharacter.character.health -= damage;
+        // Проверяем, если здоровье героя игрока достигло или упало ниже 0,
+        // удаляем его из команды игрока
+        if (targetCharacter.character.health <= 0) {
+          this.positionedPlayerTeam = this.positionedPlayerTeam.filter((char) => char !== targetCharacter);
+          // Обновляем все персонажи, чтобы убрать убитого героя
+          this.allChars = [...this.positionedPlayerTeam, ...this.positionedEnemyTeam];
+        }
+        // Обновляем отображение полоски здоровья героя игрока
+        this.gamePlay.redrawPositions(this.allChars);
+        // Переключаем ход на игрока
+        this.state.isPlayer = true;
+        // Обновляем состояние игры
+        this.state.chars = this.allChars;
+        GameState.from(this.state);
+      });
   }
 
   moveRandomEnemy() {
