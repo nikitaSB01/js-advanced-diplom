@@ -62,7 +62,7 @@ export default class GameController {
     const positions = [];
     for (let i = 0; i < this.fieldSize; i += 1) {
       for (let j = 0; j < this.fieldSize; j += 1) {
-        if (string === 'playerTeam' && j < 6) {
+        if (string === 'playerTeam' && j < 2) {
           positions.push(i * this.fieldSize + j);
         } else if (string === 'enemyTeam' && j >= this.fieldSize - 2) {
           positions.push(i * this.fieldSize + j);
@@ -202,7 +202,35 @@ export default class GameController {
   }
 
   compAct() {
-    this.moveRandomEnemy();
+    let targetHero = null; // Переменная для хранения доступного для атаки героя
+    // Получаем всех героев игрока
+    const playerHeroes = this.positionedPlayerTeam.map((hero) => hero.position);
+    // Перебираем всех злодеев на карте
+    for (const enemy of this.positionedEnemyTeam) {
+      // Проверяем доступность атаки злодея к каждому герою игрока
+      for (const playerHero of playerHeroes) {
+        if (canMoveOrAttack(enemy.character.type, enemy.position, playerHero, this.fieldSize, 'attack')) {
+          // Если хотя бы один герой игрока находится в зоне атаки злодея, 
+          // сохраняем его в переменной targetHero
+          targetHero = playerHero;
+          break; // Прерываем цикл, так как уже нашли цель для атаки
+        }
+      }
+      // Если нашли цель для атаки, выходим из внешнего цикла
+      if (targetHero !== null) {
+        break;
+      }
+    }
+    // Если есть цель для атаки, атакуем ее, иначе перемещаемся
+    if (targetHero !== null) {
+      this.enemyAttack(targetHero);
+    } else {
+      this.moveRandomEnemy();
+    }
+  }
+
+  enemyAttack(targetHero) {
+    console.log(targetHero);
   }
 
   moveRandomEnemy() {
