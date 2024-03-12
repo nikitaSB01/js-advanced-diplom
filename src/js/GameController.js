@@ -204,6 +204,7 @@ export default class GameController {
   compAct() {
     let targetHero = null; // Переменная для хранения доступного для атаки героя
     let targetEnemy = null; // Переменная для хранения доступного для атаки героя
+    let maxDamage = -Infinity; // Максимальный урон
     // Получаем всех героев игрока
     const playerHeroes = this.positionedPlayerTeam.map((hero) => hero.position);
     // Перебираем всех злодеев на карте
@@ -213,15 +214,22 @@ export default class GameController {
         if (canMoveOrAttack(enemy.character.type, enemy.position, playerHero, this.fieldSize, 'attack')) {
           // Если хотя бы один герой игрока находится в зоне атаки злодея,
           // сохраняем его в переменной targetHero
-          targetHero = playerHero;
-          targetEnemy = enemy;
-          break; // Прерываем цикл, так как уже нашли цель для атаки
+          const playerHeroCharacter = this.allChars.find((char) => char.position === playerHero);
+          const damage = this.calcDamage(enemy, playerHeroCharacter);
+
+          // Если урон текущего злодея больше максимального урона,
+          // обновляем значения максимального урона и злодея с максимальным уроном
+          if (damage > maxDamage) {
+            maxDamage = damage;
+            targetHero = playerHero;
+            targetEnemy = enemy;
+          }
         }
       }
       // Если нашли цель для атаки, выходим из внешнего цикла
-      if (targetHero !== null) {
+      /* if (targetHero !== null) {
         break;
-      }
+      } */
     }
     // Если есть цель для атаки, атакуем ее, иначе перемещаемся
     if (targetHero !== null) {
