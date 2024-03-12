@@ -121,7 +121,6 @@ export default class GameController {
     return Math.floor(damage);
   }
 
-  // eslint-disable-next-line class-methods-use-this
   onCellClick(index) {
     if (this.gameOver) return;
     const cellWithChar = this.gamePlay.cells[index].querySelector('.character');
@@ -175,8 +174,6 @@ export default class GameController {
       .then(() => {
         // Уменьшаем здоровье атакованного персонажа
         targetCharacter.character.health -= damage;
-        // Перерисовываем полоску здоровья атакованного персонажа
-        this.gamePlay.redrawPositions(this.allChars);
         // Проверяем условие победы
         if (targetCharacter.character.health <= 0) {
           // eslint-disable-next-line max-len
@@ -189,6 +186,9 @@ export default class GameController {
             this.levelUp();
           }
         }
+        // Перерисовываем полоску здоровья атакованного персонажа
+        this.gamePlay.redrawPositions(this.allChars);
+
         this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
         this.clickedChar = null;
         this.activeChar = null;
@@ -225,7 +225,6 @@ export default class GameController {
     }
     // Если есть цель для атаки, атакуем ее, иначе перемещаемся
     if (targetHero !== null) {
-      //  const playerCharacter = this.positionedPlayerTeam.find((char) => char.position === targetHero);
       this.enemyAttack(targetHero, targetEnemy);
     } else {
       this.moveRandomEnemy();
@@ -245,6 +244,7 @@ export default class GameController {
         // Проверяем, если здоровье героя игрока достигло или упало ниже 0,
         // удаляем его из команды игрока
         if (targetCharacter.character.health <= 0) {
+          // eslint-disable-next-line max-len
           this.positionedPlayerTeam = this.positionedPlayerTeam.filter((char) => char !== targetCharacter);
           // Обновляем все персонажи, чтобы убрать убитого героя
           this.allChars = [...this.positionedPlayerTeam, ...this.positionedEnemyTeam];
