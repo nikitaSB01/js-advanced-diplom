@@ -40,7 +40,7 @@ export default class GameController {
       this.playerPositions,
     );
 
-    this.enemyTeam = generateTeam([Vampire, Undead, Daemon], this.level, 4);
+    this.enemyTeam = generateTeam([Vampire, Undead, Daemon], this.level, 3);
     this.enemyPositions = this.generatePositions('enemyTeam');
     this.positionedEnemyTeam = this.createPositionedTeam(
       this.enemyTeam,
@@ -328,6 +328,63 @@ export default class GameController {
     return `\u{1F396} ${char.level} \u{2694} ${char.attack} \u{1F6E1} ${char.defence} \u{2764} ${char.health}`;
   }
 
+  levelUp() {
+    const levelThemes = [
+      { level: 1, theme: themes.prairie },
+      { level: 2, theme: themes.desert },
+      { level: 3, theme: themes.arctic },
+      { level: 4, theme: themes.mountain },
+      { level: 5, theme: null }, // Завершение игры
+    ];
+    // Находим информацию о следующем уровне
+    const nextLevel = levelThemes.find((info) => info.level === this.level + 1);
+    this.level = nextLevel.level;
+
+    if (nextLevel) {
+      // Если есть следующий уровень, устанавливаем соответствующую тему
+      this.theme = nextLevel.theme;
+    } else {
+      // Если нет следующего уровня, завершаем игру
+      this.finishGame();
+      return;
+    }
+    this.gamePlay.drawUi(this.theme);
+
+    for (const hero of this.positionedPlayerTeam) {
+      const { health, attack, defence } = hero.character;
+      hero.character.health = Math.floor(Math.min(health + 80, 100));
+      hero.character.attack = Math.floor(Math.max(attack, (attack * (80 + health)) / 100));
+      hero.character.defence = Math.floor(Math.max(defence, (defence * (80 + health)) / 100));
+      hero.character.level = this.level;
+    }
+
+    this.enemyTeam = generateTeam([Vampire, Undead, Daemon], this.level, 1);
+
+    this.playerTeam.characters = this.playerTeam.characters.filter((char) => char.health > 0);
+    this.positionedPlayerTeam = this.createPositionedTeam(this.playerTeam, this.playerPositions);
+    this.positionedEnemyTeam = this.createPositionedTeam(this.enemyTeam, this.enemyPositions);
+
+    for (const enemy of this.positionedEnemyTeam) {
+      if (enemy.character.level === this.level) {
+        const { health, attack, defence } = enemy.character;
+        enemy.character.attack = Math.floor(Math.max(attack, (attack * (80 + health)) / 100));
+        enemy.character.defence = Math.floor(Math.max(defence, (defence * (80 + health)) / 100));
+      }
+    }
+
+    this.allChars = [...this.positionedPlayerTeam, ...this.positionedEnemyTeam];
+    this.gamePlay.redrawPositions(this.allChars);
+    this.settingsDef();
+
+    this.state = {
+      isPlayer: true,
+      theme: this.theme,
+      level: this.level,
+      chars: this.allChars,
+    };
+    GameState.from(this.state);
+  }
+
   onCellEnter(index) {
     if (this.gameOver) return;
     const cellWithChar = this.gamePlay.cells[index].querySelector('.character');
@@ -397,5 +454,12 @@ export default class GameController {
     if (!this.gamePlay.cells[index].classList.contains('selected-yellow')) {
       this.gamePlay.deselectCell(index);
     }
+  }
+
+  settingsDef() {
+    this.activeChar = null;
+    this.activeIndex = null;
+    this.clickedChar = null;
+    this.enteredCell = null;
   }
 }
