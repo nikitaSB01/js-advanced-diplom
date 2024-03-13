@@ -269,8 +269,9 @@ export default class GameController {
 
   moveRandomEnemy() {
     // Выбираем случайного врага
-    const randomEnemyIndex = Math.floor(Math.random() * this.positionedEnemyTeam.length);
-    const randomEnemy = this.positionedEnemyTeam[randomEnemyIndex];
+    const randomEnemy = this.positionedEnemyTeam[Math.floor(Math.random() * this.positionedEnemyTeam.length)];
+    // Находим ближайшего к злодею героя
+    const nearestHero = this.findNearestHero(randomEnemy.position);
     // Создаем массив всех доступных ячеек для перемещения
     const availableCells = [];
     for (let i = 0; i < this.fieldSize * this.fieldSize; i += 1) {
@@ -281,16 +282,44 @@ export default class GameController {
     // Исключаем занятые ячейки из массива доступных ячеек
     const occupiedCells = this.allChars.map((char) => char.position);
     const unoccupiedCells = availableCells.filter((cell) => !occupiedCells.includes(cell));
-    // Выбираем случайную незанятую ячейку из оставшихся
-    const randomCellIndex = Math.floor(Math.random() * unoccupiedCells.length);
-    const newPosition = unoccupiedCells[randomCellIndex];
+    // Находим доступную ячейку, которая находится ближе всего к герою
+    let minDistance = Infinity;
+    let nearestCell = null;
+    for (const cell of unoccupiedCells) {
+      const distance = this.calculateDistance(cell, nearestHero);
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestCell = cell;
+      }
+    }
     // Перемещаем врага на выбранную ячейку
-    randomEnemy.position = newPosition;
+    randomEnemy.position = nearestCell;
     // Обновляем отображение персонажей
     this.gamePlay.redrawPositions(this.allChars);
     // Обновляем состояние игры
     this.state.chars = this.allChars;
     GameState.from(this.state);
+  }
+
+  findNearestHero(position) {
+    let nearestHero = null;
+    let minDistance = Infinity;
+    for (const hero of this.positionedPlayerTeam) {
+      const distance = this.calculateDistance(position, hero.position);
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestHero = hero.position;
+      }
+    }
+    return nearestHero;
+  }
+
+  calculateDistance(pos1, pos2) {
+    const row1 = Math.floor(pos1 / this.fieldSize);
+    const col1 = pos1 % this.fieldSize;
+    const row2 = Math.floor(pos2 / this.fieldSize);
+    const col2 = pos2 % this.fieldSize;
+    return Math.abs(row1 - row2) + Math.abs(col1 - col2);
   }
 
   // eslint-disable-next-line class-methods-use-this
