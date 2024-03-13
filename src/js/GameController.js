@@ -269,6 +269,7 @@ export default class GameController {
 
   moveRandomEnemy() {
     // Выбираем случайного врага
+    // eslint-disable-next-line max-len
     const randomEnemy = this.positionedEnemyTeam[Math.floor(Math.random() * this.positionedEnemyTeam.length)];
     // Находим ближайшего к злодею героя
     const nearestHero = this.findNearestHero(randomEnemy.position);
