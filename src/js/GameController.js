@@ -16,6 +16,7 @@ export default class GameController {
     this.gamePlay = gamePlay;
     this.stateService = stateService;
     this.fieldSize = this.gamePlay.boardSize;
+    this.gameOver = false; // Флаг для отслеживания завершения игры
 
     this.onCellClick = this.onCellClick.bind(this);
     this.onCellEnter = this.onCellEnter.bind(this);
@@ -40,7 +41,7 @@ export default class GameController {
       this.playerPositions,
     );
 
-    this.enemyTeam = generateTeam([Vampire, Undead, Daemon], this.level, 3);
+    this.enemyTeam = generateTeam([Vampire, Undead, Daemon], this.level, 1);
     this.enemyPositions = this.generatePositions('enemyTeam');
     this.positionedEnemyTeam = this.createPositionedTeam(
       this.enemyTeam,
@@ -234,7 +235,7 @@ export default class GameController {
     // Если есть цель для атаки, атакуем ее, иначе перемещаемся
     if (targetHero !== null) {
       this.enemyAttack(targetHero, targetEnemy);
-    } else {
+    } else if (!this.gameOver) {
       this.moveRandomEnemy();
     }
   }
@@ -341,13 +342,20 @@ export default class GameController {
     this.level = nextLevel.level;
 
     if (nextLevel) {
+      if (nextLevel.level > 4) {
+        // Если нет следующего уровня, завершаем игру
+        this.gamePlay.redrawPositions(this.allChars);
+        /*    // Обновляем состояние игры
+        this.state.chars = this.allChars;
+        GameState.from(this.state); */
+        this.settingsDef();
+        this.finishGame();
+        return;
+      }
       // Если есть следующий уровень, устанавливаем соответствующую тему
       this.theme = nextLevel.theme;
-    } else {
-      // Если нет следующего уровня, завершаем игру
-      this.finishGame();
-      return;
     }
+
     this.gamePlay.drawUi(this.theme);
 
     for (const hero of this.positionedPlayerTeam) {
@@ -461,5 +469,11 @@ export default class GameController {
     this.activeIndex = null;
     this.clickedChar = null;
     this.enteredCell = null;
+  }
+
+  finishGame() {
+    this.gameOver = true; // Устанавливаем флаг завершения игры
+    //  this.gamePlay.lock(); // Блокируем игровое поле
+    alert('The End');
   }
 }
