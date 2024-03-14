@@ -17,6 +17,7 @@ export default class GameController {
     this.stateService = stateService;
     this.fieldSize = this.gamePlay.boardSize;
     this.gameOver = false; // Флаг для отслеживания завершения игры
+    // Инициализация массива для хранения позиций врагов
 
     this.onCellClick = this.onCellClick.bind(this);
     this.onCellEnter = this.onCellEnter.bind(this);
@@ -30,19 +31,22 @@ export default class GameController {
     this.level = 1;
 
     this.gamePlay.drawUi(this.theme);
+
+    // Создаем позиции для игрока и врагов
+    this.playerPositions = this.generatePositions('playerTeam');
+    this.enemyPositions = this.generatePositions('enemyTeam');
+
     this.playerTeam = generateTeam(
       [Bowman, Swordsman, Magician],
       this.level,
       3,
     );
-    this.playerPositions = this.generatePositions('playerTeam');
     this.positionedPlayerTeam = this.createPositionedTeam(
       this.playerTeam,
       this.playerPositions,
     );
 
     this.enemyTeam = generateTeam([Vampire, Undead, Daemon], this.level, 1);
-    this.enemyPositions = this.generatePositions('enemyTeam');
     this.positionedEnemyTeam = this.createPositionedTeam(
       this.enemyTeam,
       this.enemyPositions,
@@ -61,13 +65,15 @@ export default class GameController {
 
   generatePositions(string) {
     const positions = [];
-    for (let i = 0; i < this.fieldSize; i += 1) {
-      for (let j = 0; j < this.fieldSize; j += 1) {
-        if (string === 'playerTeam' && j < 2) {
-          positions.push(i * this.fieldSize + j);
-        } else if (string === 'enemyTeam' && j >= this.fieldSize - 2) {
-          positions.push(i * this.fieldSize + j);
-        }
+    for (let i = 0; i < this.fieldSize ** 2; i += 1) {
+      const position = i % this.fieldSize;
+
+      if (string === 'playerTeam' && position <= 1) {
+        positions.push(i);
+      }
+
+      if (string === 'enemyTeam' && position >= this.fieldSize - 2) {
+        positions.push(i);
       }
     }
     return positions;
@@ -76,11 +82,13 @@ export default class GameController {
   // eslint-disable-next-line class-methods-use-this
   createPositionedTeam(team, positions) {
     const positionedTeam = [];
+
     team.characters.forEach((char) => {
       const randomIndex = Math.floor(Math.random() * positions.length);
-      const position = positions.splice(randomIndex, 1)[0];
+      const position = positions[randomIndex];
       const positionedCharacter = new PositionedCharacter(char, position);
       positionedTeam.push(positionedCharacter);
+      positions.splice(randomIndex, 1);
     });
 
     return positionedTeam;
@@ -185,6 +193,7 @@ export default class GameController {
           if (this.positionedEnemyTeam.length === 0) {
             // Вызываем метод для перехода на следующий уровень или завершения игры
             this.levelUp();
+            return;
           }
         }
         // Перерисовываем полоску здоровья атакованного персонажа
@@ -203,40 +212,32 @@ export default class GameController {
   }
 
   compAct() {
-    let targetHero = null; // Переменная для хранения доступного для атаки героя
-    let targetEnemy = null; // Переменная для хранения доступного для атаки героя
-    let maxDamage = -Infinity; // Максимальный урон
-    // Получаем всех героев игрока
-    const playerHeroes = this.positionedPlayerTeam.map((hero) => hero.position);
-    // Перебираем всех злодеев на карте
-    for (const enemy of this.positionedEnemyTeam) {
-      // Проверяем доступность атаки злодея к каждому герою игрока
-      for (const playerHero of playerHeroes) {
-        if (canMoveOrAttack(enemy.character.type, enemy.position, playerHero, this.fieldSize, 'attack')) {
-          // Если хотя бы один герой игрока находится в зоне атаки злодея,
-          // сохраняем его в переменной targetHero
-          const playerHeroCharacter = this.allChars.find((char) => char.position === playerHero);
-          const damage = this.calcDamage(enemy, playerHeroCharacter);
+    if (!this.state.isPlayer) { // Добавьте проверку, ходит ли компьютерный игрок
+      let targetHero = null;
+      let targetEnemy = null;
+      let maxDamage = -Infinity;
+      const playerHeroes = this.positionedPlayerTeam.map((hero) => hero.position);
 
-          // Если урон текущего злодея больше максимального урона,
-          // обновляем значения максимального урона и злодея с максимальным уроном
-          if (damage > maxDamage) {
-            maxDamage = damage;
-            targetHero = playerHero;
-            targetEnemy = enemy;
+      for (const enemy of this.positionedEnemyTeam) {
+        for (const playerHero of playerHeroes) {
+          if (canMoveOrAttack(enemy.character.type, enemy.position, playerHero, this.fieldSize, 'attack')) {
+            const playerHeroCharacter = this.allChars.find((char) => char.position === playerHero);
+            const damage = this.calcDamage(enemy, playerHeroCharacter);
+
+            if (damage > maxDamage) {
+              maxDamage = damage;
+              targetHero = playerHero;
+              targetEnemy = enemy;
+            }
           }
         }
       }
-      // Если нашли цель для атаки, выходим из внешнего цикла
-      /* if (targetHero !== null) {
-        break;
-      } */
-    }
-    // Если есть цель для атаки, атакуем ее, иначе перемещаемся
-    if (targetHero !== null) {
-      this.enemyAttack(targetHero, targetEnemy);
-    } else if (!this.gameOver) {
-      this.moveRandomEnemy();
+
+      if (targetHero !== null) {
+        this.enemyAttack(targetHero, targetEnemy);
+      } else if (!this.gameOver) {
+        this.moveRandomEnemy();
+      }
     }
   }
 
@@ -330,30 +331,24 @@ export default class GameController {
   }
 
   levelUp() {
-    const levelThemes = [
-      { level: 1, theme: themes.prairie },
-      { level: 2, theme: themes.desert },
-      { level: 3, theme: themes.arctic },
-      { level: 4, theme: themes.mountain },
-      { level: 5, theme: null }, // Завершение игры
-    ];
-    // Находим информацию о следующем уровне
-    const nextLevel = levelThemes.find((info) => info.level === this.level + 1);
-    this.level = nextLevel.level;
+    this.level += 1;
 
-    if (nextLevel) {
-      if (nextLevel.level > 4) {
-        // Если нет следующего уровня, завершаем игру
-        this.gamePlay.redrawPositions(this.allChars);
-        /*    // Обновляем состояние игры
-        this.state.chars = this.allChars;
-        GameState.from(this.state); */
-        this.settingsDef();
+    switch (this.level) {
+      case 2:
+        this.theme = themes.desert;
+        break;
+      case 3:
+        this.theme = themes.arctic;
+        break;
+      case 4:
+        this.theme = themes.mountain;
+        break;
+      case 5:
         this.finishGame();
         return;
-      }
-      // Если есть следующий уровень, устанавливаем соответствующую тему
-      this.theme = nextLevel.theme;
+      default:
+        this.theme = themes.prairie;
+        break;
     }
 
     this.gamePlay.drawUi(this.theme);
@@ -366,10 +361,11 @@ export default class GameController {
       hero.character.level = this.level;
     }
 
-    this.enemyTeam = generateTeam([Vampire, Undead, Daemon], this.level, 1);
-
     this.playerTeam.characters = this.playerTeam.characters.filter((char) => char.health > 0);
     this.positionedPlayerTeam = this.createPositionedTeam(this.playerTeam, this.playerPositions);
+
+    this.enemyTeam = generateTeam([Vampire, Undead, Daemon], this.level, 1);
+    this.enemyPositions = this.generatePositions('enemyTeam'); // Обновляем массив позиций врагов
     this.positionedEnemyTeam = this.createPositionedTeam(this.enemyTeam, this.enemyPositions);
 
     for (const enemy of this.positionedEnemyTeam) {
@@ -473,7 +469,9 @@ export default class GameController {
 
   finishGame() {
     this.gameOver = true; // Устанавливаем флаг завершения игры
-    //  this.gamePlay.lock(); // Блокируем игровое поле
-    alert('The End');
+    this.settingsDef();
+    this.gamePlay.setCursor('default');
+    this.gamePlay.redrawPositions(this.allChars);
+    GamePlay.showMessage('Вы выиграли!');
   }
 }
