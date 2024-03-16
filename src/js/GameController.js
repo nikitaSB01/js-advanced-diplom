@@ -345,6 +345,7 @@ export default class GameController {
         break;
       case 5:
         this.finishGame();
+        this.winOrOver('победа');
         return;
       default:
         this.theme = themes.prairie;
@@ -465,6 +466,7 @@ export default class GameController {
     this.activeIndex = null;
     this.clickedChar = null;
     this.enteredCell = null;
+    this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
   }
 
   finishGame() {
@@ -472,6 +474,18 @@ export default class GameController {
     this.settingsDef();
     this.gamePlay.setCursor('default');
     this.gamePlay.redrawPositions(this.allChars);
-    GamePlay.showMessage('Вы выиграли!');
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  winOrOver(winOrOver) {
+    if (winOrOver === 'победа') {
+      setTimeout(() => {
+        GamePlay.showMessage('Вы выиграли!');
+      }, 100);
+    } else {
+      setTimeout(() => {
+        GamePlay.showMessage('Вы проиграли!');
+      }, 100);
+    }
   }
 }
