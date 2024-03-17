@@ -258,6 +258,13 @@ export default class GameController {
           this.positionedPlayerTeam = this.positionedPlayerTeam.filter((char) => char !== targetCharacter);
           // Обновляем все персонажи, чтобы убрать убитого героя
           this.allChars = [...this.positionedPlayerTeam, ...this.positionedEnemyTeam];
+          // Проверяем, остались ли еще враги
+          if (this.positionedPlayerTeam.length === 0) {
+            // Вызываем метод для перехода на следующий уровень или завершения игры
+            this.finishGame();
+            this.winOrOver('поражение');
+            return;
+          }
         }
         // Обновляем отображение полоски здоровья героя игрока
         this.gamePlay.redrawPositions(this.allChars);
@@ -372,6 +379,7 @@ export default class GameController {
     for (const enemy of this.positionedEnemyTeam) {
       if (enemy.character.level === this.level) {
         const { health, attack, defence } = enemy.character;
+        enemy.character.health = 100;
         enemy.character.attack = Math.floor(Math.max(attack, (attack * (80 + health)) / 100));
         enemy.character.defence = Math.floor(Math.max(defence, (defence * (80 + health)) / 100));
       }
@@ -487,5 +495,12 @@ export default class GameController {
         GamePlay.showMessage('Вы проиграли!');
       }, 100);
     }
+  }
+
+  // Начинаем новую игру
+  newGame() {
+    this.gameOver = false;
+    this.settingsDef();
+    this.init();
   }
 }
