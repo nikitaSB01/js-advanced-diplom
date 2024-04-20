@@ -579,31 +579,29 @@ export default class GameController {
   saveGame() {
     this.stateService.save(this.state);
     GamePlay.showMessage('Игра сохранена');
-  }
+}
 
-  loadGame() {
-    this.settingsDef();
-    this.gamePlay.setCursor('default');
-    this.state = this.stateService.load();
-    // Обновляем характеристики и позиции персонажей на основе загруженных данных
-    this.allChars = this.state.chars;
-    this.positionedPlayerTeam = [this.allChars[0], this.allChars[1], this.allChars[2]];
-    this.positionedEnemyTeam = [this.allChars[3]];
-
-    if (!this.state) {
+loadGame() {
+  this.settingsDef();
+  this.state = this.stateService.load();
+  // Проверяем наличие сохраненного состояния
+  if (!this.state) {
       GamePlay.showMessage('Нет сохраненных игр');
       return;
-    }
-    console.log('Loaded state:', this.state); // Выводим загруженное состояние в консоль
-
-    this.level = this.state.level;
-    this.theme = this.state.theme;
-    //  this.allChars = this.state.chars;
-
-    this.gamePlay.drawUi(this.theme);
-    this.gamePlay.redrawPositions(this.allChars);
-    this.settingsDef();
-
-    GamePlay.showMessage('Игра загружена');
   }
+  console.log('Loaded state:', this.state);
+
+  // Восстанавливаем объекты персонажей из сохраненных данных
+  this.allChars = this.state.chars.map(char => Object.assign({}, char));
+
+  // Обновляем отображение персонажей
+  this.level = this.state.level;
+  this.theme = this.state.theme;
+  this.gamePlay.drawUi(this.theme);
+  this.gamePlay.redrawPositions(this.allChars);
+  this.gamePlay.setCursor('default');
+
+  // Сообщаем об успешной загрузке игры
+  GamePlay.showMessage('Игра загружена');
+}
 }

@@ -4,7 +4,7 @@ export default class GameState {
       player: object.isPlayer,
       theme: object.theme,
       level: object.level,
-      allChars: object.chars,
+      chars: object.chars,
     };
 
     return state;
