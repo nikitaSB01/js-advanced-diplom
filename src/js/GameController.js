@@ -50,8 +50,7 @@ export default class GameController {
     this.positionedEnemyTeam = this.createPositionedTeam(
       this.enemyTeam,
       this.enemyPositions,
-    );
-    this.allChars = [...this.positionedPlayerTeam, ...this.positionedEnemyTeam];
+    ); this.allChars = [...this.positionedPlayerTeam, ...this.positionedEnemyTeam];
 
     this.gamePlay.redrawPositions(this.allChars);
     this.state = {
@@ -61,6 +60,8 @@ export default class GameController {
       chars: this.allChars,
     };
     GameState.from(this.state);
+
+    console.log('Initialized state:', this.state); // Выводим инициализированное состояние в консоль
   }
 
   generatePositions(string) {
@@ -155,7 +156,9 @@ export default class GameController {
       this.activeChar = this.clickedChar;
       this.activeIndex = index;
     } else {
-      GamePlay.showMessage('Вы не выбрали персонажа или делаете недоступный Вам ход');
+      GamePlay.showMessage(
+        'Вы не выбрали персонажа или делаете недоступный Вам ход',
+      );
       this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
       this.clickedChar = null;
     }
@@ -163,65 +166,93 @@ export default class GameController {
 
   // Перемещение игрока
   playerStep(index) {
+    console.log('запуск playerStep');
+
     this.activeChar.position = index;
     this.gamePlay.redrawPositions(this.allChars);
     this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
     this.clickedChar = null;
     this.state.isPlayer = false;
     this.state.chars = this.allChars;
+
     GameState.from(this.state);
     this.compAct();
   }
 
   playerAttack(index) {
+    console.log('запуск playerAttack');
+
     // Получаем информацию о цели атаки
-    const targetCharacter = this.allChars.find((char) => char.position === index);
+    const targetCharacter = this.allChars.find(
+      (char) => char.position === index,
+    );
     // Рассчитываем урон
     const damage = this.calcDamage(this.activeChar, targetCharacter);
     // Отображаем анимацию урона
-    this.gamePlay.showDamage(index, damage)
-      .then(() => {
-        // Уменьшаем здоровье атакованного персонажа
-        targetCharacter.character.health -= damage;
-        // Проверяем условие победы
-        if (targetCharacter.character.health <= 0) {
-          // eslint-disable-next-line max-len
-          this.positionedEnemyTeam = this.positionedEnemyTeam.filter((char) => char !== targetCharacter);
-          this.allChars = [...this.positionedPlayerTeam, ...this.positionedEnemyTeam];
+    this.gamePlay.showDamage(index, damage).then(() => {
+      // Уменьшаем здоровье атакованного персонажа
+      targetCharacter.character.health -= damage;
+      // Проверяем условие победы
+      if (targetCharacter.character.health <= 0) {
+        // eslint-disable-next-line max-len
+        this.positionedEnemyTeam = this.positionedEnemyTeam.filter(
+          (char) => char !== targetCharacter,
+        );
+        this.allChars = [
+          ...this.positionedPlayerTeam,
+          ...this.positionedEnemyTeam,
+        ];
 
-          // Проверяем, остались ли еще враги
-          if (this.positionedEnemyTeam.length === 0) {
-            // Вызываем метод для перехода на следующий уровень или завершения игры
-            this.levelUp();
-            return;
-          }
+        // Проверяем, остались ли еще враги
+        if (this.positionedEnemyTeam.length === 0) {
+          // Вызываем метод для перехода на следующий уровень или завершения игры
+          this.levelUp();
+          return;
         }
-        // Перерисовываем полоску здоровья атакованного персонажа
-        this.gamePlay.redrawPositions(this.allChars);
+      }
+      // Перерисовываем полоску здоровья атакованного персонажа
+      this.gamePlay.redrawPositions(this.allChars);
 
-        this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
-        this.clickedChar = null;
-        this.activeChar = null;
-        this.state.isPlayer = false;
-        // Обновляем состояние игры
-        this.state.chars = this.allChars;
-        GameState.from(this.state);
-        // Переключаем ход компьютеру
-        this.compAct();
-      });
+      this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
+      this.clickedChar = null;
+      this.activeChar = null;
+      this.state.isPlayer = false;
+      // Обновляем состояние игры
+      this.state.chars = this.allChars;
+
+      GameState.from(this.state);
+      // Переключаем ход компьютеру
+      this.compAct();
+    });
   }
 
   compAct() {
-    if (!this.state.isPlayer) { // Добавьте проверку, ходит ли компьютерный игрок
+    console.log('запуск compAct');
+
+    if (!this.state.isPlayer) {
+      // проверка ходит ли компьютерный игрок
       let targetHero = null;
       let targetEnemy = null;
       let maxDamage = -Infinity;
-      const playerHeroes = this.positionedPlayerTeam.map((hero) => hero.position);
+      const playerHeroes = this.positionedPlayerTeam.map(
+        (hero) => hero.position,
+      );
 
       for (const enemy of this.positionedEnemyTeam) {
         for (const playerHero of playerHeroes) {
-          if (canMoveOrAttack(enemy.character.type, enemy.position, playerHero, this.fieldSize, 'attack')) {
-            const playerHeroCharacter = this.allChars.find((char) => char.position === playerHero);
+          if (
+            canMoveOrAttack(
+              enemy.character.type,
+              enemy.position,
+              playerHero,
+              this.fieldSize,
+              'attack',
+            )
+          ) {
+            const playerHeroCharacter = this.allChars.find(
+              (char) => char.position === playerHero,
+            );
+
             const damage = this.calcDamage(enemy, playerHeroCharacter);
 
             if (damage > maxDamage) {
@@ -242,56 +273,78 @@ export default class GameController {
   }
 
   enemyAttack(targetHero, targetEnemy) {
+    console.log('запуск enemyAttack');
+
     // Находим цель атаки (героя игрока) по индексу
-    const targetCharacter = this.allChars.find((char) => char.position === targetHero);
+    const targetCharacter = this.allChars.find(
+      (char) => char.position === targetHero,
+    );
     // Рассчитываем урон злодея по цели атаки
     const damage = this.calcDamage(targetEnemy, targetCharacter);
     // Отображаем анимацию урона на герое игрока
-    this.gamePlay.showDamage(targetHero, damage)
-      .then(() => {
-        // Уменьшаем здоровье героя игрока на рассчитанный урон
-        targetCharacter.character.health -= damage;
-        // Проверяем, если здоровье героя игрока достигло или упало ниже 0,
-        // удаляем его из команды игрока
-        if (targetCharacter.character.health <= 0) {
-          // eslint-disable-next-line max-len
-          this.positionedPlayerTeam = this.positionedPlayerTeam.filter((char) => char !== targetCharacter);
-          // Обновляем все персонажи, чтобы убрать убитого героя
-          this.allChars = [...this.positionedPlayerTeam, ...this.positionedEnemyTeam];
-          // Проверяем, остались ли еще враги
-          if (this.positionedPlayerTeam.length === 0) {
-            // Вызываем метод для перехода на следующий уровень или завершения игры
-            this.finishGame();
-            this.winOrOver('поражение');
-            return;
-          }
+    this.gamePlay.showDamage(targetHero, damage).then(() => {
+      // Уменьшаем здоровье героя игрока на рассчитанный урон
+      targetCharacter.character.health -= damage;
+      // Проверяем, если здоровье героя игрока достигло или упало ниже 0,
+      // удаляем его из команды игрока
+      if (targetCharacter.character.health <= 0) {
+        // eslint-disable-next-line max-len
+        this.positionedPlayerTeam = this.positionedPlayerTeam.filter(
+          (char) => char !== targetCharacter,
+        );
+        // Обновляем все персонажи, чтобы убрать убитого героя
+        this.allChars = [
+          ...this.positionedPlayerTeam,
+          ...this.positionedEnemyTeam,
+        ];
+        // Проверяем, остались ли еще враги
+        if (this.positionedPlayerTeam.length === 0) {
+          // Вызываем метод для перехода на следующий уровень или завершения игры
+          this.finishGame();
+          this.winOrOver('поражение');
+          return;
         }
-        // Обновляем отображение полоски здоровья героя игрока
-        this.gamePlay.redrawPositions(this.allChars);
-        // Переключаем ход на игрока
-        this.state.isPlayer = true;
-        // Обновляем состояние игры
-        this.state.chars = this.allChars;
-        GameState.from(this.state);
-      });
+      }
+      // Обновляем отображение полоски здоровья героя игрока
+      this.gamePlay.redrawPositions(this.allChars);
+      // Переключаем ход на игрока
+      this.state.isPlayer = true;
+      // Обновляем состояние игры
+      this.state.chars = this.allChars;
+
+      GameState.from(this.state);
+    });
   }
 
   moveRandomEnemy() {
+    console.log('запуск moveRandomEnemy');
+
     // Выбираем случайного врага
     // eslint-disable-next-line max-len
-    const randomEnemy = this.positionedEnemyTeam[Math.floor(Math.random() * this.positionedEnemyTeam.length)];
-    // Находим ближайшего к злодею героя
+    const randomEnemy = this.positionedEnemyTeam[
+      Math.floor(Math.random() * this.positionedEnemyTeam.length)
+    ]; // Находим ближайшего к злодею героя
     const nearestHero = this.findNearestHero(randomEnemy.position);
     // Создаем массив всех доступных ячеек для перемещения
     const availableCells = [];
     for (let i = 0; i < this.fieldSize * this.fieldSize; i += 1) {
-      if (canMoveOrAttack(randomEnemy.character.type, randomEnemy.position, i, this.fieldSize, 'move')) {
+      if (
+        canMoveOrAttack(
+          randomEnemy.character.type,
+          randomEnemy.position,
+          i,
+          this.fieldSize,
+          'move',
+        )
+      ) {
         availableCells.push(i);
       }
     }
     // Исключаем занятые ячейки из массива доступных ячеек
     const occupiedCells = this.allChars.map((char) => char.position);
-    const unoccupiedCells = availableCells.filter((cell) => !occupiedCells.includes(cell));
+    const unoccupiedCells = availableCells.filter(
+      (cell) => !occupiedCells.includes(cell),
+    );
     // Находим доступную ячейку, которая находится ближе всего к герою
     let minDistance = Infinity;
     let nearestCell = null;
@@ -308,6 +361,7 @@ export default class GameController {
     this.gamePlay.redrawPositions(this.allChars);
     // Обновляем состояние игры
     this.state.chars = this.allChars;
+
     GameState.from(this.state);
   }
 
@@ -338,6 +392,7 @@ export default class GameController {
   }
 
   levelUp() {
+    console.log('---LEVEL UP---');
     this.level += 1;
 
     switch (this.level) {
@@ -364,24 +419,40 @@ export default class GameController {
     for (const hero of this.positionedPlayerTeam) {
       const { health, attack, defence } = hero.character;
       hero.character.health = Math.floor(Math.min(health + 80, 100));
-      hero.character.attack = Math.floor(Math.max(attack, (attack * (80 + health)) / 100));
-      hero.character.defence = Math.floor(Math.max(defence, (defence * (80 + health)) / 100));
+      hero.character.attack = Math.floor(
+        Math.max(attack, (attack * (80 + health)) / 100),
+      );
+      hero.character.defence = Math.floor(
+        Math.max(defence, (defence * (80 + health)) / 100),
+      );
       hero.character.level = this.level;
     }
 
-    this.playerTeam.characters = this.playerTeam.characters.filter((char) => char.health > 0);
-    this.positionedPlayerTeam = this.createPositionedTeam(this.playerTeam, this.playerPositions);
+    this.playerTeam.characters = this.playerTeam.characters.filter(
+      (char) => char.health > 0,
+    );
+    this.positionedPlayerTeam = this.createPositionedTeam(
+      this.playerTeam,
+      this.playerPositions,
+    );
 
     this.enemyTeam = generateTeam([Vampire, Undead, Daemon], this.level, 1);
     this.enemyPositions = this.generatePositions('enemyTeam'); // Обновляем массив позиций врагов
-    this.positionedEnemyTeam = this.createPositionedTeam(this.enemyTeam, this.enemyPositions);
+    this.positionedEnemyTeam = this.createPositionedTeam(
+      this.enemyTeam,
+      this.enemyPositions,
+    );
 
     for (const enemy of this.positionedEnemyTeam) {
       if (enemy.character.level === this.level) {
         const { health, attack, defence } = enemy.character;
         enemy.character.health = 100;
-        enemy.character.attack = Math.floor(Math.max(attack, (attack * (80 + health)) / 100));
-        enemy.character.defence = Math.floor(Math.max(defence, (defence * (80 + health)) / 100));
+        enemy.character.attack = Math.floor(
+          Math.max(attack, (attack * (80 + health)) / 100),
+        );
+        enemy.character.defence = Math.floor(
+          Math.max(defence, (defence * (80 + health)) / 100),
+        );
       }
     }
 
@@ -502,5 +573,37 @@ export default class GameController {
     this.gameOver = false;
     this.settingsDef();
     this.init();
+  }
+
+  // Сохраняем игру в localStorage
+  saveGame() {
+    this.stateService.save(this.state);
+    GamePlay.showMessage('Игра сохранена');
+  }
+
+  loadGame() {
+    this.settingsDef();
+    this.gamePlay.setCursor('default');
+    this.state = this.stateService.load();
+    // Обновляем характеристики и позиции персонажей на основе загруженных данных
+    this.allChars = this.state.chars;
+    this.positionedPlayerTeam = [this.allChars[0], this.allChars[1], this.allChars[2]];
+    this.positionedEnemyTeam = [this.allChars[3]];
+
+    if (!this.state) {
+      GamePlay.showMessage('Нет сохраненных игр');
+      return;
+    }
+    console.log('Loaded state:', this.state); // Выводим загруженное состояние в консоль
+
+    this.level = this.state.level;
+    this.theme = this.state.theme;
+    //  this.allChars = this.state.chars;
+
+    this.gamePlay.drawUi(this.theme);
+    this.gamePlay.redrawPositions(this.allChars);
+    this.settingsDef();
+
+    GamePlay.showMessage('Игра загружена');
   }
 }
