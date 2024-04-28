@@ -29,9 +29,7 @@ export default class GameController {
   init() {
     this.theme = themes.prairie;
     this.level = 1;
-
     this.gamePlay.drawUi(this.theme);
-
     // Создаем позиции для игрока и врагов
     this.playerPositions = this.generatePositions('playerTeam');
     this.enemyPositions = this.generatePositions('enemyTeam');
@@ -45,6 +43,8 @@ export default class GameController {
       this.playerTeam,
       this.playerPositions,
     );
+    console.log('this.playerTeam=>', this.playerTeam);
+    console.log('this.positionedPlayerTeam=>', this.positionedPlayerTeam);
 
     this.enemyTeam = generateTeam([Vampire, Undead, Daemon], this.level, 1);
     this.positionedEnemyTeam = this.createPositionedTeam(
@@ -53,13 +53,21 @@ export default class GameController {
     ); this.allChars = [...this.positionedPlayerTeam, ...this.positionedEnemyTeam];
 
     this.gamePlay.redrawPositions(this.allChars);
-    this.state = {
+    /* this.state = {
       isPlayer: true,
       theme: this.theme,
       level: this.level,
       chars: this.allChars,
+    }; */
+    this.gameState = {
+      positionsUser: this.positionedPlayerTeam,
+      positionsBot: this.positionedEnemyTeam,
+      isPlayer: true,
+      level: this.level,
+      theme: this.theme,
     };
-    GameState.from(this.state);
+    console.log('init.gameState ===>', this.gameState);
+    //  GameState.from(this.gameState);
 
     console.log('Initialized state:', this.state); // Выводим инициализированное состояние в консоль
   }
@@ -172,10 +180,10 @@ export default class GameController {
     this.gamePlay.redrawPositions(this.allChars);
     this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
     this.clickedChar = null;
-    this.state.isPlayer = false;
-    this.state.chars = this.allChars;
+    this.gameState.isPlayer = false;
+    //  this.state.chars = this.allChars;
 
-    GameState.from(this.state);
+    //  GameState.from(this.state);
     this.compAct();
   }
 
@@ -216,11 +224,11 @@ export default class GameController {
       this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
       this.clickedChar = null;
       this.activeChar = null;
-      this.state.isPlayer = false;
+      this.gameState.isPlayer = false;
       // Обновляем состояние игры
-      this.state.chars = this.allChars;
+      //  this.state.chars = this.allChars;
 
-      GameState.from(this.state);
+      //  GameState.from(this.state);
       // Переключаем ход компьютеру
       this.compAct();
     });
@@ -229,7 +237,7 @@ export default class GameController {
   compAct() {
     console.log('запуск compAct');
 
-    if (!this.state.isPlayer) {
+    if (!this.gameState.isPlayer) {
       // проверка ходит ли компьютерный игрок
       let targetHero = null;
       let targetEnemy = null;
@@ -308,11 +316,11 @@ export default class GameController {
       // Обновляем отображение полоски здоровья героя игрока
       this.gamePlay.redrawPositions(this.allChars);
       // Переключаем ход на игрока
-      this.state.isPlayer = true;
+      this.gameState.isPlayer = true;
       // Обновляем состояние игры
-      this.state.chars = this.allChars;
+      //  this.state.chars = this.allChars;
 
-      GameState.from(this.state);
+      //  GameState.from(this.state);
     });
   }
 
@@ -360,9 +368,9 @@ export default class GameController {
     // Обновляем отображение персонажей
     this.gamePlay.redrawPositions(this.allChars);
     // Обновляем состояние игры
-    this.state.chars = this.allChars;
+    //  this.state.chars = this.allChars;
 
-    GameState.from(this.state);
+    //  GameState.from(this.state);
   }
 
   findNearestHero(position) {
@@ -460,13 +468,20 @@ export default class GameController {
     this.gamePlay.redrawPositions(this.allChars);
     this.settingsDef();
 
-    this.state = {
+    this.gameState = {
+      positionsUser: this.positionedPlayerTeam,
+      positionsBot: this.positionedEnemyTeam,
+      isPlayer: true,
+      level: this.level,
+      theme: this.theme,
+    };
+    /* this.state = {
       isPlayer: true,
       theme: this.theme,
       level: this.level,
       chars: this.allChars,
-    };
-    GameState.from(this.state);
+    }; */
+    //  GameState.from(this.state);
   }
 
   onCellEnter(index) {
@@ -575,33 +590,50 @@ export default class GameController {
     this.init();
   }
 
-  // Сохраняем игру в localStorage
   saveGame() {
-    this.stateService.save(this.state);
+    this.stateService.save(this.gameState);
     GamePlay.showMessage('Игра сохранена');
-}
+  }
 
-loadGame() {
-  this.settingsDef();
-  this.state = this.stateService.load();
-  // Проверяем наличие сохраненного состояния
-  if (!this.state) {
+  loadGame() {
+    const data = this.stateService.load();
+    if (!data) {
       GamePlay.showMessage('Нет сохраненных игр');
       return;
+    }
+    this.gameState = GameState.from(data);
+    console.log('loadGame.gameState ===>', this.gameState);
+    this.allChars = [...this.gameState.positionsUser, ...this.gameState.positionsBot];
+
+    this.playerTeam = this.gameState.userTeam;
+    this.enemyTeam = this.gameState.botTeam;
+    this.positionedEnemyTeam = this.gameState.positionsBot;
+    this.positionedPlayerTeam = this.gameState.positionsUser;
+    // Обновляем отображение персонажей
+    this.level = this.gameState.level;
+    this.theme = this.gameState.theme;
+    this.gamePlay.drawUi(this.theme);
+    this.gamePlay.redrawPositions(this.allChars);
+    this.gamePlay.setCursor('default');
   }
-  console.log('Loaded state:', this.state);
 
-  // Восстанавливаем объекты персонажей из сохраненных данных
-  this.allChars = this.state.chars.map(char => Object.assign({}, char));
+/*
+  loadGame() {
+    this.settingsDef();
+    this.state = this.stateService.load();
 
-  // Обновляем отображение персонажей
-  this.level = this.state.level;
-  this.theme = this.state.theme;
-  this.gamePlay.drawUi(this.theme);
-  this.gamePlay.redrawPositions(this.allChars);
-  this.gamePlay.setCursor('default');
+    console.log('Loaded state:', this.state);
 
-  // Сообщаем об успешной загрузке игры
-  GamePlay.showMessage('Игра загружена');
-}
+    // Восстанавливаем объекты персонажей из сохраненных данных
+    this.allChars = this.state.chars.map((char) => ({ ...char }));
+
+    // Обновляем отображение персонажей
+    this.level = this.state.level;
+    this.theme = this.state.theme;
+    this.gamePlay.drawUi(this.theme);
+    this.gamePlay.redrawPositions(this.allChars);
+    this.gamePlay.setCursor('default');
+
+    GamePlay.showMessage('Игра загружена');
+  } */
 }
