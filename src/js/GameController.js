@@ -43,8 +43,6 @@ export default class GameController {
       this.playerTeam,
       this.playerPositions,
     );
-    console.log('this.playerTeam=>', this.playerTeam);
-    console.log('this.positionedPlayerTeam=>', this.positionedPlayerTeam);
 
     this.enemyTeam = generateTeam([Vampire, Undead, Daemon], this.level, 1);
     this.positionedEnemyTeam = this.createPositionedTeam(
@@ -53,12 +51,6 @@ export default class GameController {
     ); this.allChars = [...this.positionedPlayerTeam, ...this.positionedEnemyTeam];
 
     this.gamePlay.redrawPositions(this.allChars);
-    /* this.state = {
-      isPlayer: true,
-      theme: this.theme,
-      level: this.level,
-      chars: this.allChars,
-    }; */
     this.gameState = {
       positionsUser: this.positionedPlayerTeam,
       positionsBot: this.positionedEnemyTeam,
@@ -66,9 +58,6 @@ export default class GameController {
       level: this.level,
       theme: this.theme,
     };
-    console.log('init.gameState ===>', this.gameState);
-    //  GameState.from(this.gameState);
-
     console.log('Initialized state:', this.state); // Выводим инициализированное состояние в консоль
   }
 
@@ -181,9 +170,6 @@ export default class GameController {
     this.gamePlay.cells.forEach((cell, i) => this.gamePlay.deselectCell(i));
     this.clickedChar = null;
     this.gameState.isPlayer = false;
-    //  this.state.chars = this.allChars;
-
-    //  GameState.from(this.state);
     this.compAct();
   }
 
@@ -225,10 +211,6 @@ export default class GameController {
       this.clickedChar = null;
       this.activeChar = null;
       this.gameState.isPlayer = false;
-      // Обновляем состояние игры
-      //  this.state.chars = this.allChars;
-
-      //  GameState.from(this.state);
       // Переключаем ход компьютеру
       this.compAct();
     });
@@ -317,10 +299,6 @@ export default class GameController {
       this.gamePlay.redrawPositions(this.allChars);
       // Переключаем ход на игрока
       this.gameState.isPlayer = true;
-      // Обновляем состояние игры
-      //  this.state.chars = this.allChars;
-
-      //  GameState.from(this.state);
     });
   }
 
@@ -367,10 +345,6 @@ export default class GameController {
     randomEnemy.position = nearestCell;
     // Обновляем отображение персонажей
     this.gamePlay.redrawPositions(this.allChars);
-    // Обновляем состояние игры
-    //  this.state.chars = this.allChars;
-
-    //  GameState.from(this.state);
   }
 
   findNearestHero(position) {
@@ -475,13 +449,6 @@ export default class GameController {
       level: this.level,
       theme: this.theme,
     };
-    /* this.state = {
-      isPlayer: true,
-      theme: this.theme,
-      level: this.level,
-      chars: this.allChars,
-    }; */
-    //  GameState.from(this.state);
   }
 
   onCellEnter(index) {
@@ -616,24 +583,4 @@ export default class GameController {
     this.gamePlay.redrawPositions(this.allChars);
     this.gamePlay.setCursor('default');
   }
-
-/*
-  loadGame() {
-    this.settingsDef();
-    this.state = this.stateService.load();
-
-    console.log('Loaded state:', this.state);
-
-    // Восстанавливаем объекты персонажей из сохраненных данных
-    this.allChars = this.state.chars.map((char) => ({ ...char }));
-
-    // Обновляем отображение персонажей
-    this.level = this.state.level;
-    this.theme = this.state.theme;
-    this.gamePlay.drawUi(this.theme);
-    this.gamePlay.redrawPositions(this.allChars);
-    this.gamePlay.setCursor('default');
-
-    GamePlay.showMessage('Игра загружена');
-  } */
 }
