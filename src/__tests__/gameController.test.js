@@ -1,15 +1,15 @@
 import GameController from '../js/GameController';
 import GamePlay from '../js/GamePlay';
 import Vampire from '../js/characters/Vampire';
-import GameState from '../js/GameState';
+//  import GameState from '../js/GameState';
 import GameStateService from '../js/GameStateService';
-import Team from '../js/Team';
-import PositionedCharacter from '../js/PositionedCharacter';
-import Bowman from '../js/characters/Bowman';
-import Swordsman from '../js/characters/Swordsman';
-import Magician from '../js/characters/Magician';
-import Daemon from '../js/characters/Daemon';
-import Undead from '../js/characters/Undead';
+//  import Team from '../js/Team';
+//  import PositionedCharacter from '../js/PositionedCharacter';
+//  import Bowman from '../js/characters/Bowman';
+//  import Swordsman from '../js/characters/Swordsman';
+//  import Magician from '../js/characters/Magician';
+//  import Daemon from '../js/characters/Daemon';
+//  import Undead from '../js/characters/Undead';
 
 test('Create tooltip message', () => {
   const gamePlay = new GamePlay();

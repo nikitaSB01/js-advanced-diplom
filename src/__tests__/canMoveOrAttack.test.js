@@ -1,4 +1,4 @@
-import canMoveOrAttack from '../js/attackOrMove';
+import canMoveOrAttack from '../js/AttackOrMove';
 
 test.each([
   ['bowman', 3, 19, 8, 'move', true],

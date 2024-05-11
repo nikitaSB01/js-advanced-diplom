@@ -9,7 +9,7 @@ import Daemon from './characters/Daemon';
 import Undead from './characters/Undead';
 import GameState from './GameState';
 import { generateTeam } from './generators';
-import canMoveOrAttack from './attackOrMove';
+import canMoveOrAttack from './AttackOrMove';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
