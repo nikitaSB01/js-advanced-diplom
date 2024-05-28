@@ -57,6 +57,7 @@ export default class GameController {
       isPlayer: true,
       level: this.level,
       theme: this.theme,
+      positionedCharacter: this.allChars,
     };
     console.log('Initialized state:', this.state); // Выводим инициализированное состояние в консоль
   }
@@ -130,7 +131,10 @@ export default class GameController {
 
   onCellClick(index) {
     if (this.gameOver) return;
-    const cellWithChar = this.gamePlay.cells[index].querySelector('.character');
+
+    //  const cellWithChar = this.gamePlay.cells[index].querySelector('.character');
+    const cellWithChar = this.gameState.positionedCharacter.find((char) => char.position === index);
+
     this.clickedChar = this.allChars.find((char) => char.position === index);
 
     // Перемещаем персонажа
@@ -232,7 +236,7 @@ export default class GameController {
         for (const playerHero of playerHeroes) {
           if (
             canMoveOrAttack(
-              enemy.character.type,
+              enemy.character,
               enemy.position,
               playerHero,
               this.fieldSize,
@@ -316,7 +320,7 @@ export default class GameController {
     for (let i = 0; i < this.fieldSize * this.fieldSize; i += 1) {
       if (
         canMoveOrAttack(
-          randomEnemy.character.type,
+          randomEnemy.character,
           randomEnemy.position,
           i,
           this.fieldSize,
@@ -448,6 +452,7 @@ export default class GameController {
       isPlayer: true,
       level: this.level,
       theme: this.theme,
+      positionedCharacter: this.allChars,
     };
   }
 
@@ -471,7 +476,7 @@ export default class GameController {
     // Если есть кликнутый персонаж при наведении им на другую клетку без персонажа,
     // проверяем может ли туда походить персонаж, если да, то подсвечиваем зеленым кругом
     if (this.clickedChar && !cellWithChar) {
-      const playerType = this.clickedChar.character.type;
+      const playerType = this.clickedChar.character;
 
       if (
         canMoveOrAttack(
@@ -495,7 +500,7 @@ export default class GameController {
       const isPlayerChar = this.checkPlayerChar(this.enteredChar);
       if (isPlayerChar) return;
 
-      const attackerType = this.clickedChar.character.type;
+      const attackerType = this.clickedChar.character;
       if (
         canMoveOrAttack(
           attackerType,
@@ -557,7 +562,18 @@ export default class GameController {
     this.init();
   }
 
+  filterDeadCharacters() {
+  // eslint-disable-next-line max-len
+    this.positionedPlayerTeam = this.positionedPlayerTeam.filter((char) => char.character.health > 0);
+    this.positionedEnemyTeam = this.positionedEnemyTeam.filter((char) => char.character.health > 0);
+    this.allChars = [...this.positionedPlayerTeam, ...this.positionedEnemyTeam];
+  }
+
   saveGame() {
+    this.filterDeadCharacters();
+    this.gameState.positionsUser = this.positionedPlayerTeam;
+    this.gameState.positionsBot = this.positionedEnemyTeam;
+    this.gameState.positionedCharacter = this.allChars;
     this.stateService.save(this.gameState);
     GamePlay.showMessage('Игра сохранена');
   }
@@ -571,6 +587,7 @@ export default class GameController {
     this.gameState = GameState.from(data);
     console.log('loadGame.gameState ===>', this.gameState);
     this.allChars = [...this.gameState.positionsUser, ...this.gameState.positionsBot];
+    this.gameState.positionedCharacter = this.allChars;
 
     this.playerTeam = this.gameState.userTeam;
     this.enemyTeam = this.gameState.botTeam;
@@ -584,3 +601,4 @@ export default class GameController {
     this.gamePlay.setCursor('default');
   }
 }
+//  this.gameState.positionedCharacter.find((char) => char.position === index);
