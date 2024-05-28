@@ -18,6 +18,8 @@ test('check creating object new Character - throw error', () => {
     defence: 25,
     health: 50,
     type: 'bowman',
+    maxAttackRadius: 2,
+    maxMoveDistance: 2,
   };
   const expectedUndead = {
     level: 1,
@@ -25,6 +27,8 @@ test('check creating object new Character - throw error', () => {
     defence: 10,
     health: 50,
     type: 'undead',
+    maxAttackRadius: 1,
+    maxMoveDistance: 4,
   };
   const expectedDaemon = {
     level: 1,
@@ -32,6 +36,8 @@ test('check creating object new Character - throw error', () => {
     defence: 10,
     health: 50,
     type: 'daemon',
+    maxAttackRadius: 4,
+    maxMoveDistance: 1,
   };
   const expectedVampire = {
     level: 1,
@@ -39,6 +45,8 @@ test('check creating object new Character - throw error', () => {
     defence: 25,
     health: 50,
     type: 'vampire',
+    maxAttackRadius: 2,
+    maxMoveDistance: 2,
   };
   expect(new Bowman(1)).toEqual(expetedBowman);
   expect(new Undead(1)).toEqual(expectedUndead);

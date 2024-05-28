@@ -20,6 +20,8 @@ test('check PositionedCharacter in character and position', () => {
       defence: 25,
       health: 50,
       type: 'vampire',
+      maxMoveDistance: 2,
+      maxAttackRadius: 2,
     },
   };
   expect(resExpect.character).toEqual(result.Vampire);
